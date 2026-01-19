@@ -1,0 +1,8 @@
+{
+  "name": "Scamstagram",
+  "description": "A cyberpunk, gamified social security platform where users hunt scams, report phishing, and earn Aptos crypto rewards.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
