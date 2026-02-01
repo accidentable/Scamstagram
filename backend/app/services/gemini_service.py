@@ -58,10 +58,14 @@ async def analyze_scam_image(base64_data: str, mime_type: str) -> ScanResultData
         if "," in base64_data:
             base64_data = base64_data.split(",")[1]
 
+        print(f"[Gemini] Calling API with mime_type: {mime_type}, data length: {len(base64_data)}")
+        
         response = model.generate_content([
             {"mime_type": mime_type, "data": base64_data},
             prompt
         ])
+
+        print(f"[Gemini] Response received: {response.text[:200] if response.text else 'No text'}")
 
         import json
         result_text = response.text.strip()
@@ -72,6 +76,7 @@ async def analyze_scam_image(base64_data: str, mime_type: str) -> ScanResultData
                 result_text = result_text[4:]
 
         result = json.loads(result_text)
+        print(f"[Gemini] Parsed result: {result}")
 
         return ScanResultData(
             is_scam=result.get("isScam", True),
@@ -83,7 +88,9 @@ async def analyze_scam_image(base64_data: str, mime_type: str) -> ScanResultData
         )
 
     except Exception as e:
-        print(f"Gemini API Error: {e}")
+        import traceback
+        print(f"[Gemini] ERROR: {type(e).__name__}: {e}")
+        print(f"[Gemini] Traceback: {traceback.format_exc()}")
         return ScanResultData(
             is_scam=True,
             confidence_score=60,
