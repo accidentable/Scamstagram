@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 from typing import Optional
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User
@@ -228,7 +229,6 @@ class AnalyzeJsonRequest(BaseModel):
     mime_type: str
 
 
-from pydantic import BaseModel as PydanticBaseModel
 
 
 @router.post("/analyze-json", response_model=AnalyzeResponse)
