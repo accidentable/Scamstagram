@@ -40,7 +40,7 @@ async def analyze_scam_image(base64_data: str, mime_type: str) -> ScanResultData
         )
 
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
 
     prompt = """Analyze this image for potential scam or phishing content.
     Return a JSON object with the following fields:
