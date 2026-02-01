@@ -1,0 +1,9 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+venv
+.env.local
+*.db
+uploads/images/*
+!uploads/images/.gitkeep

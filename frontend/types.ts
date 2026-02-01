@@ -1,6 +1,7 @@
 export enum Tab {
   FEED = 'FEED',
-  SCAN = 'SCAN',
+  REPORT = 'REPORT',
+  QUIZ = 'QUIZ',
   WALLET = 'WALLET',
 }
 
@@ -12,6 +13,13 @@ export interface User {
   isVerified: boolean;
 }
 
+export interface Comment {
+  id: string;
+  user: User;
+  content: string;
+  timestamp: string;
+}
+
 export interface Post {
   id: string;
   user: User;
@@ -20,30 +28,47 @@ export interface Post {
   scamType: string;
   tags: string[];
   timestamp: string;
-  metooCount: number;
+  likeCount: number;
+  commentCount: number;
+  comments: Comment[];
   isVerifiedScam: boolean;
+  scamScore: number;
 }
 
 export interface ScanResult {
   isScam: boolean;
-  confidenceScore: number; // 0-100
+  confidenceScore: number;
   scamType: string;
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   extractedTags: string[];
   analysis: string;
 }
 
-export interface WalletData {
-  balance: number;
-  dailyHuntCount: number;
-  dailyHuntLimit: number;
-  history: { day: string; amount: number }[];
+export interface QuizQuestion {
+  id: string;
+  type: 'ox' | 'multiple';
+  question: string;
+  imageUrl?: string;
+  options?: string[];
+  correctAnswer: string | boolean;
+  explanation: string;
+  points: number;
 }
 
-export interface MarketItem {
+export interface WalletData {
+  balance: number;
+  todayReported: boolean;
+  todayQuizCompleted: boolean;
+  totalReports: number;
+  totalQuizzes: number;
+  history: { day: string; amount: number; type: string }[];
+}
+
+export interface RewardItem {
   id: string;
   name: string;
+  description: string;
   price: number;
   icon: string;
-  category: string;
+  category: 'voucher' | 'donation' | 'badge';
 }

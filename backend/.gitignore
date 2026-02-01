@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+
+# Database
+*.db
+*.sqlite3
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (keep folder but ignore contents)
+uploads/images/*
+!uploads/images/.gitkeep
+
+# Logs
+*.log
+firebase-debug.log
+
+# Temp files
+tmpclaude-*
+*-cwd
