@@ -223,6 +223,36 @@ async def analyze_image(
     )
 
 
+class AnalyzeJsonRequest(BaseModel):
+    image_data: str
+    mime_type: str
+
+
+from pydantic import BaseModel as PydanticBaseModel
+
+
+@router.post("/analyze-json", response_model=AnalyzeResponse)
+async def analyze_image_json(
+    request: AnalyzeJsonRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Analyze image from base64 JSON payload"""
+    scan_data = await analyze_scam_image(request.image_data, request.mime_type)
+    scam_score = calculate_scam_score(scan_data.risk_level, scan_data.confidence_score)
+
+    return AnalyzeResponse(
+        scan_result=ScanResultResponse(
+            is_scam=scan_data.is_scam,
+            confidence_score=scan_data.confidence_score,
+            scam_type=scan_data.scam_type,
+            risk_level=scan_data.risk_level,
+            extracted_tags=scan_data.extracted_tags,
+            analysis=scan_data.analysis
+        ),
+        scam_score=scam_score
+    )
+
+
 @router.get("/{post_id}", response_model=PostResponse)
 async def get_post(
     post_id: uuid.UUID,

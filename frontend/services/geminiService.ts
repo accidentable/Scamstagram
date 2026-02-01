@@ -12,10 +12,12 @@ export const analyzeScamMedia = async (base64Data: string, mimeType: string): Pr
     const cleanBase64 = base64Data.split(',')[1] || base64Data;
 
     // Call backend API instead of Gemini directly
-    const response = await fetch(`${API_BASE}/posts/analyze`, {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/posts/analyze-json`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         image_data: cleanBase64,
