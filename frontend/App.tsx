@@ -31,7 +31,7 @@ export default function App() {
     const token = localStorage.getItem('token');
     if (token) {
       // Verify token and get user info
-      fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'}/auth/me`, {
+      fetch(`${import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1'}/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` },
       })
         .then((res) => {

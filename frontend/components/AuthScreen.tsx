@@ -12,7 +12,7 @@ export function AuthScreen({ onLogin }: AuthScreenProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1';
+  const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

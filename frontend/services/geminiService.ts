@@ -1,6 +1,6 @@
 import { ScanResult } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
 
 /**
  * Analyze scam media via backend API
