@@ -50,14 +50,21 @@ async def lifespan(app: FastAPI):
     print("Starting up...")
 
     # Create upload directory
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    try:
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    except Exception as e:
+        print(f"Warning: Could not create upload dir: {e}")
 
     # Initialize database
-    await init_db()
-    print("Database initialized")
-
-    # Create admin user
-    await create_admin_user()
+    try:
+        await init_db()
+        print("Database initialized")
+        
+        # Create admin user
+        await create_admin_user()
+    except Exception as e:
+        print(f"Warning: Database initialization failed: {e}")
+        print("App will start but database features may not work")
 
     yield
 
@@ -80,9 +87,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        "https://sweet-taxes-fry.loca.lt",  # localtunnel frontend
     ],
-    allow_origin_regex=r"https://.*\.loca\.lt",  # Allow all localtunnel domains
+    allow_origin_regex=r"https://.*\.(run\.app|web\.app|loca\.lt|firebaseapp\.com)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
