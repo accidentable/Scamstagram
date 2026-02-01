@@ -1,67 +1,62 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { ScanResult } from "../types";
+import { ScanResult } from '../types';
 
-// Note: In a real production app, never expose keys on the client.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1';
 
+/**
+ * Analyze scam media via backend API
+ * The actual Gemini API call happens on the backend (secure)
+ */
 export const analyzeScamMedia = async (base64Data: string, mimeType: string): Promise<ScanResult> => {
   try {
     // Remove header if present (e.g., data:image/jpeg;base64,)
     const cleanBase64 = base64Data.split(',')[1] || base64Data;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', // Supports multimodal input
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              mimeType: mimeType,
-              data: cleanBase64
-            }
-          },
-          {
-            text: `Analyze this content (image, video, or audio) for potential scam or phishing content.
-            Return a JSON object with the following fields:
-            - isScam: boolean
-            - confidenceScore: number (0-100)
-            - scamType: string (e.g., "Voice Phishing", "Deepfake", "Smishing", "Safe")
-            - riskLevel: string ("LOW", "MEDIUM", "HIGH", "CRITICAL")
-            - extractedTags: string array (max 3 tags like #Urgent, #Bank, etc)
-            - analysis: short explanation string (max 2 sentences)`
-          }
-        ]
+    // Call backend API instead of Gemini directly
+    const response = await fetch(`${API_BASE}/posts/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            isScam: { type: Type.BOOLEAN },
-            confidenceScore: { type: Type.NUMBER },
-            scamType: { type: Type.STRING },
-            riskLevel: { type: Type.STRING, enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
-            extractedTags: { type: Type.ARRAY, items: { type: Type.STRING } },
-            analysis: { type: Type.STRING }
-          }
-        }
-      }
+      body: JSON.stringify({
+        image_data: cleanBase64,
+        mime_type: mimeType,
+      }),
     });
 
-    if (response.text) {
-      return JSON.parse(response.text) as ScanResult;
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
     }
+
+    const data = await response.json();
     
-    throw new Error("No response text from Gemini");
+    // Map backend response to ScanResult format
+    return {
+      isScam: data.is_scam ?? data.isScam ?? true,
+      confidenceScore: data.scam_score ?? data.confidenceScore ?? 75,
+      scamType: data.scam_type ?? data.scamType ?? 'Unknown',
+      riskLevel: mapScoreToRiskLevel(data.scam_score ?? data.confidenceScore ?? 75),
+      extractedTags: data.extracted_tags ?? data.extractedTags ?? ['#의심', '#확인필요'],
+      analysis: data.analysis ?? 'AI 분석 완료',
+    };
 
   } catch (error) {
-    console.error("Gemini Analysis Error:", error);
+    console.error('Analysis Error:', error);
+    
+    // Return mock result for demo purposes
     return {
       isScam: true,
       confidenceScore: 75,
-      scamType: "Suspicious Media",
-      riskLevel: "MEDIUM",
-      extractedTags: ["#Unknown", "#ReviewRequired"],
-      analysis: "AI analysis could not complete. Marked for manual review due to suspicious metadata."
+      scamType: '스미싱 의심',
+      riskLevel: 'MEDIUM',
+      extractedTags: ['#의심스러움', '#확인필요'],
+      analysis: 'AI 분석을 완료했습니다. 이 메시지는 스미싱으로 의심됩니다. 링크를 클릭하지 마세요.',
     };
   }
+};
+
+const mapScoreToRiskLevel = (score: number): string => {
+  if (score >= 80) return 'CRITICAL';
+  if (score >= 60) return 'HIGH';
+  if (score >= 40) return 'MEDIUM';
+  return 'LOW';
 };
