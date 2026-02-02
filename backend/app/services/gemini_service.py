@@ -42,16 +42,16 @@ async def analyze_scam_image(base64_data: str, mime_type: str) -> ScanResultData
     genai.configure(api_key=settings.GEMINI_API_KEY)
     model = genai.GenerativeModel("gemini-2.0-flash")
 
-    prompt = """Analyze this image for potential scam or phishing content.
-    Return a JSON object with the following fields:
-    - isScam: boolean (true if this appears to be a scam)
-    - confidenceScore: number (0-100, how confident you are)
-    - scamType: string (e.g., "Voice Phishing", "Smishing", "Investment Scam", "Romance Scam", "Safe")
-    - riskLevel: string (must be one of: "LOW", "MEDIUM", "HIGH", "CRITICAL")
-    - extractedTags: string array (max 3 relevant tags like "Urgent", "Bank", "Family")
-    - analysis: string (2-3 sentence Korean explanation of why this is or isn't a scam)
+    prompt = """이 이미지에서 스캠/피싱 콘텐츠가 있는지 분석해주세요.
+    다음 필드를 포함한 JSON 객체로 응답해주세요:
+    - isScam: boolean (스캠으로 보이면 true)
+    - confidenceScore: number (0-100, 확신도)
+    - scamType: string (예: "보이스피싱", "스미싱", "투자사기", "로맨스스캠", "안전")
+    - riskLevel: string (반드시 다음 중 하나: "LOW", "MEDIUM", "HIGH", "CRITICAL")
+    - extractedTags: string array (최대 3개, 한국어 태그, 예: "택배", "은행", "가족사칭")
+    - analysis: string (왜 이것이 스캠인지 또는 안전한지 2-3문장으로 한국어로 설명)
 
-    Respond ONLY with valid JSON, no markdown formatting."""
+    반드시 유효한 JSON만 응답하고, 마크다운 포맷팅 없이 응답하세요."""
 
     try:
         # Remove data URL prefix if present
