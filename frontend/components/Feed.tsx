@@ -7,28 +7,39 @@ import { Post } from '../types';
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
 
 // API 응답 (snake_case) -> 프론트엔드 타입 (camelCase) 변환
-const transformPost = (apiPost: any): Post => ({
-  id: apiPost.id,
-  user: {
-    id: apiPost.user?.id || 'unknown',
-    username: apiPost.user?.username || '익명',
-    avatar: apiPost.user?.avatar || `https://picsum.photos/seed/${apiPost.id}/200/200`,
-    level: apiPost.user?.level || 1,
-    isVerified: apiPost.user?.is_verified || false,
-  },
-  imageUrl: apiPost.image_url?.startsWith('/') 
-    ? `${API_BASE.replace('/api/v1', '')}${apiPost.image_url}` 
-    : apiPost.image_url || '',
-  description: apiPost.description || '',
-  scamType: apiPost.scam_type || 'Unknown',
-  tags: typeof apiPost.tags === 'string' ? JSON.parse(apiPost.tags || '[]') : (apiPost.tags || []),
-  timestamp: apiPost.created_at || apiPost.timestamp || new Date().toISOString(),
-  likeCount: apiPost.like_count || 0,
-  commentCount: apiPost.comment_count || 0,
-  comments: apiPost.comments || [],
-  isVerifiedScam: apiPost.is_verified_scam || false,
-  scamScore: apiPost.scam_score || 0,
-});
+const transformPost = (apiPost: any): Post => {
+  // 이미지 URL 처리 - 백엔드가 이미 imageUrl로 보내거나 image_url로 보낼 수 있음
+  const rawImageUrl = apiPost.imageUrl || apiPost.image_url || '';
+  let imageUrl = rawImageUrl;
+  
+  // 상대 경로면 백엔드 URL 추가
+  if (rawImageUrl.startsWith('/uploads')) {
+    imageUrl = `https://scamkeep-api-932863380761.asia-northeast3.run.app${rawImageUrl}`;
+  } else if (rawImageUrl.startsWith('/')) {
+    imageUrl = `https://scamkeep-api-932863380761.asia-northeast3.run.app${rawImageUrl}`;
+  }
+  
+  return {
+    id: apiPost.id,
+    user: {
+      id: apiPost.user?.id || 'unknown',
+      username: apiPost.user?.username || '익명',
+      avatar: apiPost.user?.avatar || `https://picsum.photos/seed/${apiPost.id}/200/200`,
+      level: apiPost.user?.level || 1,
+      isVerified: apiPost.user?.is_verified || apiPost.user?.isVerified || false,
+    },
+    imageUrl: imageUrl,
+    description: apiPost.description || '',
+    scamType: apiPost.scamType || apiPost.scam_type || 'Unknown',
+    tags: typeof apiPost.tags === 'string' ? JSON.parse(apiPost.tags || '[]') : (apiPost.tags || []),
+    timestamp: apiPost.timestamp || apiPost.created_at || new Date().toISOString(),
+    likeCount: apiPost.likeCount || apiPost.like_count || 0,
+    commentCount: apiPost.commentCount || apiPost.comment_count || 0,
+    comments: apiPost.comments || [],
+    isVerifiedScam: apiPost.isVerifiedScam || apiPost.is_verified_scam || false,
+    scamScore: apiPost.scamScore || apiPost.scam_score || 0,
+  };
+};
 
 export const Feed: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
