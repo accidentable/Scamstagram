@@ -1,6 +1,7 @@
 import uuid
 import os
 import base64
+import json
 import aiofiles
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
@@ -158,7 +159,7 @@ async def create_post(
         image_url=f"/uploads/images/{filename}",
         description=description,
         scam_type=scan_data.scam_type,
-        tags=scan_data.extracted_tags,
+        tags=json.dumps(scan_data.extracted_tags),
         scam_score=scam_score,
         is_verified_scam=scan_data.is_scam and scan_data.confidence_score >= 70
     )
@@ -172,7 +173,7 @@ async def create_post(
         confidence_score=scan_data.confidence_score,
         scam_type=scan_data.scam_type,
         risk_level=scan_data.risk_level,
-        extracted_tags=scan_data.extracted_tags,
+        extracted_tags=json.dumps(scan_data.extracted_tags),
         analysis=scan_data.analysis
     )
     db.add(scan_result)
@@ -277,7 +278,7 @@ async def analyze_image_json(
                 image_url=f"/uploads/images/{filename}",
                 description=ai_description,
                 scam_type=scan_data.scam_type,
-                tags=scan_data.extracted_tags,
+                tags=json.dumps(scan_data.extracted_tags),
                 scam_score=scam_score,
                 is_verified_scam=scan_data.is_scam and scan_data.confidence_score >= 70
             )
@@ -291,7 +292,7 @@ async def analyze_image_json(
                 confidence_score=scan_data.confidence_score,
                 scam_type=scan_data.scam_type,
                 risk_level=scan_data.risk_level,
-                extracted_tags=scan_data.extracted_tags,
+                extracted_tags=json.dumps(scan_data.extracted_tags),
                 analysis=scan_data.analysis
             )
             db.add(scan_result_db)
