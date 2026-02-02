@@ -205,7 +205,7 @@ export const Report: React.FC = () => {
                 <div>
                   <h3 className="font-black text-xl leading-none">{result.isScam ? '스캠 의심' : '안전해 보임'}</h3>
                   <span className={`text-xs font-bold px-2 py-0.5 rounded mt-1 inline-block ${getRiskColor(result.riskLevel)}`}>
-                    {getRiskLabel(result.riskLevel)} · 신뢰도 {result.confidenceScore}%
+                    {getRiskLabel(result.riskLevel)} · 위험도 {result.confidenceScore}%
                   </span>
                 </div>
               </div>

@@ -21,7 +21,7 @@ from app.schemas.post import (
 )
 from app.schemas.user import UserPublic
 from app.api.deps import get_current_user
-from app.services.gemini_service import analyze_scam_image, calculate_scam_score, ScanResultData
+from app.services.gemini_service import analyze_scam_image, calculate_scam_score, ScanResultData, generate_post_description
 from app.services.wallet_service import reward_for_report
 from app.config import settings
 
@@ -234,11 +234,66 @@ class AnalyzeJsonRequest(BaseModel):
 @router.post("/analyze-json", response_model=AnalyzeResponse)
 async def analyze_image_json(
     request: AnalyzeJsonRequest,
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Analyze image from base64 JSON payload"""
+    """Analyze image from base64 JSON payload and auto-post if risk >= 40%"""
     scan_data = await analyze_scam_image(request.image_data, request.mime_type)
     scam_score = calculate_scam_score(scan_data.risk_level, scan_data.confidence_score)
+
+    rewarded = False
+    points_earned = 0
+    post_id = None
+
+    # 위험도 40% 이상이면 자동으로 피드에 게시하고 포인트 지급
+    if scam_score >= 40:
+        # AI로 글 자동 작성
+        ai_description = await generate_post_description(scan_data)
+        
+        # 이미지를 파일로 저장
+        import base64
+        file_ext = request.mime_type.split("/")[-1] if "/" in request.mime_type else "jpg"
+        filename = f"{uuid.uuid4()}.{file_ext}"
+        file_path = os.path.join(settings.UPLOAD_DIR, filename)
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        
+        # Base64 디코딩 후 저장
+        clean_base64 = request.image_data.split(",")[1] if "," in request.image_data else request.image_data
+        image_bytes = base64.b64decode(clean_base64)
+        
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(image_bytes)
+        
+        # 포스트 생성
+        post = Post(
+            user_id=current_user.id,
+            image_url=f"/uploads/images/{filename}",
+            description=ai_description,
+            scam_type=scan_data.scam_type,
+            tags=scan_data.extracted_tags,
+            scam_score=scam_score,
+            is_verified_scam=scan_data.is_scam and scan_data.confidence_score >= 70
+        )
+        db.add(post)
+        await db.flush()
+        
+        # 스캔 결과 저장
+        scan_result_db = ScanResult(
+            post_id=post.id,
+            is_scam=scan_data.is_scam,
+            confidence_score=scan_data.confidence_score,
+            scam_type=scan_data.scam_type,
+            risk_level=scan_data.risk_level,
+            extracted_tags=scan_data.extracted_tags,
+            analysis=scan_data.analysis
+        )
+        db.add(scan_result_db)
+        
+        # 포인트 지급 (하루 1회)
+        rewarded, points_earned = await reward_for_report(db, current_user.id)
+        
+        await db.commit()
+        post_id = str(post.id)
 
     return AnalyzeResponse(
         scan_result=ScanResultResponse(

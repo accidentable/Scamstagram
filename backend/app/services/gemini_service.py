@@ -99,3 +99,40 @@ async def analyze_scam_image(base64_data: str, mime_type: str) -> ScanResultData
             extracted_tags=["Error", "ManualReview"],
             analysis=f"AI 분석 중 오류가 발생했습니다. 수동 검토가 필요합니다."
         )
+
+
+async def generate_post_description(scan_result: ScanResultData) -> str:
+    """Generate a post description based on scan result using AI"""
+    
+    if not settings.GEMINI_API_KEY or settings.GEMINI_API_KEY == "your-gemini-api-key-here":
+        return f"'{scan_result.scam_type}' 유형의 스캠으로 의심됩니다. 주의하세요!"
+    
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    
+    prompt = f"""다음 스캠 분석 결과를 바탕으로 SNS 피드에 올릴 짧은 경고 글을 작성해주세요.
+
+스캠 유형: {scan_result.scam_type}
+위험도: {scan_result.risk_level}
+분석 내용: {scan_result.analysis}
+태그: {', '.join(scan_result.extracted_tags)}
+
+요구사항:
+- 1-2문장으로 간결하게 작성
+- 다른 사용자들에게 경고하는 톤
+- 한국어로 작성
+- 이모지 사용 가능
+- 절대 링크 클릭하지 말라는 경고 포함
+
+글만 작성하세요, 다른 설명 없이."""
+
+    try:
+        response = model.generate_content(prompt)
+        description = response.text.strip()
+        # 너무 길면 자르기
+        if len(description) > 200:
+            description = description[:197] + "..."
+        return description
+    except Exception as e:
+        print(f"[Gemini] Generate description error: {e}")
+        return f"⚠️ '{scan_result.scam_type}' 스캠 주의! 절대 링크를 클릭하지 마세요."
