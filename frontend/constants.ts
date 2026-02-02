@@ -131,6 +131,241 @@ export const MOCK_POSTS: Post[] = [
     comments: [],
     isVerifiedScam: true,
     scamScore: 98
+  },
+  {
+    id: 'p4',
+    user: {
+      id: 'u6',
+      username: '택배조심',
+      avatar: 'https://picsum.photos/seed/user6/200/200',
+      level: 4,
+      isVerified: true
+    },
+    imageUrl: 'https://picsum.photos/seed/delivery/600/800',
+    description: '[CJ대한통운] 주소 불일치로 배송 불가. 주소 확인 요망 → 전형적인 택배 사칭 스미싱입니다!',
+    scamType: '택배사칭',
+    tags: ['스미싱', '택배사칭', 'CJ대한통운'],
+    timestamp: '3시간 전',
+    likeCount: 256,
+    commentCount: 42,
+    comments: [
+      {
+        id: 'c2',
+        user: { id: 'u7', username: '배송알림', avatar: 'https://picsum.photos/seed/u7/100/100', level: 1, isVerified: false },
+        content: '요즘 이런 문자 너무 많아요. 항상 공식 앱으로 확인하세요!',
+        timestamp: '2시간 전'
+      }
+    ],
+    isVerifiedScam: true,
+    scamScore: 92
+  },
+  {
+    id: 'p5',
+    user: {
+      id: 'u8',
+      username: '금융감시단',
+      avatar: 'https://picsum.photos/seed/finance/200/200',
+      level: 6,
+      isVerified: true
+    },
+    imageUrl: 'https://picsum.photos/seed/bank/600/800',
+    description: '[국민은행] 고객님 계좌가 정지되었습니다. 본인확인 필요 - 은행은 절대 문자로 계좌정지 안내 안합니다!',
+    scamType: '은행사칭',
+    tags: ['스미싱', '은행사칭', '계좌정지'],
+    timestamp: '4시간 전',
+    likeCount: 423,
+    commentCount: 67,
+    comments: [],
+    isVerifiedScam: true,
+    scamScore: 96
+  },
+  {
+    id: 'p6',
+    user: {
+      id: 'u9',
+      username: '정부지원금헌터',
+      avatar: 'https://picsum.photos/seed/gov/200/200',
+      level: 3,
+      isVerified: false
+    },
+    imageUrl: 'https://picsum.photos/seed/support/600/800',
+    description: '긴급재난지원금 신청하세요! 라는 문자... 정부 지원금은 절대 문자 링크로 신청 안받아요.',
+    scamType: '정부사칭',
+    tags: ['스미싱', '지원금사기', '정부사칭'],
+    timestamp: '6시간 전',
+    likeCount: 189,
+    commentCount: 31,
+    comments: [
+      {
+        id: 'c3',
+        user: { id: 'u10', username: '공공기관', avatar: 'https://picsum.photos/seed/u10/100/100', level: 4, isVerified: true },
+        content: '정부24나 공식 앱으로만 신청하세요!',
+        timestamp: '5시간 전'
+      }
+    ],
+    isVerifiedScam: true,
+    scamScore: 89
+  },
+  {
+    id: 'p7',
+    user: {
+      id: 'u11',
+      username: '중고나라경찰',
+      avatar: 'https://picsum.photos/seed/market/200/200',
+      level: 5,
+      isVerified: true
+    },
+    imageUrl: 'https://picsum.photos/seed/trade/600/800',
+    description: '중고거래 사기범 수법 공개! "안전결제" 링크 보내면서 피싱 사이트로 유도합니다.',
+    scamType: '중고거래사기',
+    tags: ['중고거래', '안전결제사기', '피싱'],
+    timestamp: '8시간 전',
+    likeCount: 534,
+    commentCount: 78,
+    comments: [],
+    isVerifiedScam: true,
+    scamScore: 91
+  },
+  {
+    id: 'p8',
+    user: {
+      id: 'u12',
+      username: '로맨스스캠신고',
+      avatar: 'https://picsum.photos/seed/romance/200/200',
+      level: 4,
+      isVerified: true
+    },
+    imageUrl: 'https://picsum.photos/seed/love/600/800',
+    description: 'SNS에서 만난 외국인이 투자를 권유하며 송금 요청... 전형적인 로맨스 스캠입니다.',
+    scamType: '로맨스스캠',
+    tags: ['로맨스스캠', 'SNS사기', '투자유도'],
+    timestamp: '12시간 전',
+    likeCount: 678,
+    commentCount: 112,
+    comments: [
+      {
+        id: 'c4',
+        user: { id: 'u13', username: '피해자모임', avatar: 'https://picsum.photos/seed/u13/100/100', level: 2, isVerified: false },
+        content: '저도 비슷한 경험 있어요... 이런 정보 공유 감사합니다.',
+        timestamp: '10시간 전'
+      }
+    ],
+    isVerifiedScam: true,
+    scamScore: 94
+  },
+  {
+    id: 'p9',
+    user: {
+      id: 'u14',
+      username: '취준생지킴이',
+      avatar: 'https://picsum.photos/seed/job/200/200',
+      level: 3,
+      isVerified: false
+    },
+    imageUrl: 'https://picsum.photos/seed/employ/600/800',
+    description: '재택알바 월 500만원! 계좌만 빌려주세요 → 보이스피싱 대포통장 만드는 수법입니다!',
+    scamType: '취업사기',
+    tags: ['취업사기', '재택알바', '대포통장'],
+    timestamp: '1일 전',
+    likeCount: 892,
+    commentCount: 145,
+    comments: [],
+    isVerifiedScam: true,
+    scamScore: 97
+  },
+  {
+    id: 'p10',
+    user: {
+      id: 'u15',
+      username: '대출조심하세요',
+      avatar: 'https://picsum.photos/seed/loan/200/200',
+      level: 5,
+      isVerified: true
+    },
+    imageUrl: 'https://picsum.photos/seed/money/600/800',
+    description: '저금리 대환대출 문자 받으셨나요? 선입금 요구하면 100% 사기입니다!',
+    scamType: '대출사기',
+    tags: ['대출사기', '선입금', '저금리유혹'],
+    timestamp: '1일 전',
+    likeCount: 445,
+    commentCount: 56,
+    comments: [
+      {
+        id: 'c5',
+        user: { id: 'u16', username: '금융피해자', avatar: 'https://picsum.photos/seed/u16/100/100', level: 1, isVerified: false },
+        content: '수수료 먼저 내라고 해서 의심했는데 역시 사기였네요...',
+        timestamp: '20시간 전'
+      }
+    ],
+    isVerifiedScam: true,
+    scamScore: 93
+  },
+  {
+    id: 'p11',
+    user: {
+      id: 'u17',
+      username: '리딩방피해자',
+      avatar: 'https://picsum.photos/seed/stock/200/200',
+      level: 2,
+      isVerified: false
+    },
+    imageUrl: 'https://picsum.photos/seed/trading/600/800',
+    description: '카톡 주식리딩방 수익 인증 다 조작입니다. 가입비 내면 끝! 절대 속지 마세요.',
+    scamType: '리딩방사기',
+    tags: ['리딩방', '주식사기', '카카오톡'],
+    timestamp: '2일 전',
+    likeCount: 1023,
+    commentCount: 189,
+    comments: [],
+    isVerifiedScam: true,
+    scamScore: 96
+  },
+  {
+    id: 'p12',
+    user: {
+      id: 'u18',
+      username: '결제알림주의',
+      avatar: 'https://picsum.photos/seed/payment/200/200',
+      level: 4,
+      isVerified: true
+    },
+    imageUrl: 'https://picsum.photos/seed/card/600/800',
+    description: '[결제완료] 1,250,000원 승인 → 본인 아닐 경우 연락 바람. 이 문자 받으면 절대 전화하지 마세요!',
+    scamType: '결제사칭',
+    tags: ['결제사기', '카드사칭', '전화유도'],
+    timestamp: '2일 전',
+    likeCount: 756,
+    commentCount: 98,
+    comments: [
+      {
+        id: 'c6',
+        user: { id: 'u19', username: '카드회사직원', avatar: 'https://picsum.photos/seed/u19/100/100', level: 6, isVerified: true },
+        content: '카드사는 이런 식으로 문자 안 보냅니다. 공식 앱에서 확인하세요!',
+        timestamp: '1일 전'
+      }
+    ],
+    isVerifiedScam: true,
+    scamScore: 94
+  },
+  {
+    id: 'p13',
+    user: {
+      id: 'u20',
+      username: '경찰청협력',
+      avatar: 'https://picsum.photos/seed/police/200/200',
+      level: 8,
+      isVerified: true
+    },
+    imageUrl: 'https://picsum.photos/seed/cyber/600/800',
+    description: '수사기관 사칭 전화 녹음 공개! "범죄에 연루되어 조사가 필요하다"며 금전 요구하는 전형적 수법.',
+    scamType: '수사기관사칭',
+    tags: ['보이스피싱', '경찰사칭', '금전요구'],
+    timestamp: '3일 전',
+    likeCount: 1567,
+    commentCount: 234,
+    comments: [],
+    isVerifiedScam: true,
+    scamScore: 99
   }
 ];
 
