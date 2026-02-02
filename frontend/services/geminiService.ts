@@ -2,11 +2,16 @@ import { ScanResult } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
 
+export interface AnalyzeResult extends ScanResult {
+  scamScore: number;  // 40% 이상이면 포인트 지급
+  rewarded?: boolean;
+}
+
 /**
  * Analyze scam media via backend API
  * The actual Gemini API call happens on the backend (secure)
  */
-export const analyzeScamMedia = async (base64Data: string, mimeType: string): Promise<ScanResult> => {
+export const analyzeScamMedia = async (base64Data: string, mimeType: string): Promise<AnalyzeResult> => {
   try {
     // Remove header if present (e.g., data:image/jpeg;base64,)
     const cleanBase64 = base64Data.split(',')[1] || base64Data;
@@ -30,15 +35,18 @@ export const analyzeScamMedia = async (base64Data: string, mimeType: string): Pr
     }
 
     const data = await response.json();
+    const scamScore = data.scam_score ?? 0;
     
     // Map backend response to ScanResult format
     return {
-      isScam: data.is_scam ?? data.isScam ?? true,
-      confidenceScore: data.scam_score ?? data.confidenceScore ?? 75,
-      scamType: data.scam_type ?? data.scamType ?? 'Unknown',
-      riskLevel: mapScoreToRiskLevel(data.scam_score ?? data.confidenceScore ?? 75),
-      extractedTags: data.extracted_tags ?? data.extractedTags ?? ['#의심', '#확인필요'],
-      analysis: data.analysis ?? 'AI 분석 완료',
+      isScam: data.scan_result?.is_scam ?? true,
+      confidenceScore: data.scan_result?.confidence_score ?? 75,
+      scamType: data.scan_result?.scam_type ?? 'Unknown',
+      riskLevel: data.scan_result?.risk_level ?? 'MEDIUM',
+      extractedTags: data.scan_result?.extracted_tags ?? ['#의심', '#확인필요'],
+      analysis: data.scan_result?.analysis ?? 'AI 분석 완료',
+      scamScore: scamScore,
+      rewarded: scamScore >= 40,
     };
 
   } catch (error) {
@@ -51,7 +59,9 @@ export const analyzeScamMedia = async (base64Data: string, mimeType: string): Pr
       scamType: '스미싱 의심',
       riskLevel: 'MEDIUM',
       extractedTags: ['#의심스러움', '#확인필요'],
-      analysis: 'AI 분석을 완료했습니다. 이 메시지는 스미싱으로 의심됩니다. 링크를 클릭하지 마세요.',
+      analysis: 'AI 분석을 완료했습니다. 이 메시지는 스미싱으로 의심됩니다.',
+      scamScore: 0,
+      rewarded: false,
     };
   }
 };

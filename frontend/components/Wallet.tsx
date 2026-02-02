@@ -1,10 +1,48 @@
-import React, { useState } from 'react';
-import { INITIAL_WALLET, REWARD_ITEMS, MOCK_USER } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { REWARD_ITEMS, MOCK_USER } from '../constants';
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from 'recharts';
-import { Gift, ShoppingBag, TrendingUp, FileText, Award, ChevronRight } from 'lucide-react';
+import { Gift, ShoppingBag, TrendingUp, Award, ChevronRight, Loader2 } from 'lucide-react';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
+
+interface WalletData {
+  balance: number;
+  total_reports: number;
+  total_quizzes: number;
+  today_reported: boolean;
+  today_quiz_completed: boolean;
+  history: Array<{ day: string; amount: number; type: string }>;
+}
 
 export const Wallet: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [walletData, setWalletData] = useState<WalletData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/wallet/`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setWalletData(data);
+        }
+      } catch (e) {
+        console.error('Failed to fetch wallet:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWallet();
+  }, []);
 
   const categories = [
     { id: 'all', label: '전체' },
@@ -16,6 +54,19 @@ export const Wallet: React.FC = () => {
   const filteredItems = selectedCategory === 'all'
     ? REWARD_ITEMS
     : REWARD_ITEMS.filter(item => item.category === selectedCategory);
+
+  if (loading) {
+    return (
+      <div className="pt-24 pb-28 px-4 min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  const balance = walletData?.balance ?? 0;
+  const totalReports = walletData?.total_reports ?? 0;
+  const totalQuizzes = walletData?.total_quizzes ?? 0;
+  const history = walletData?.history ?? [];
 
   return (
     <div className="pt-24 pb-28 px-4 min-h-screen bg-slate-50">
@@ -29,7 +80,7 @@ export const Wallet: React.FC = () => {
                 <span className="text-blue-200 font-bold text-xs uppercase tracking-widest">내 포인트</span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <h2 className="text-4xl font-black tracking-tight">
-                    {INITIAL_WALLET.balance.toLocaleString()}
+                    {balance.toLocaleString()}
                   </h2>
                   <span className="text-xl font-bold text-blue-200">P</span>
                 </div>
@@ -43,11 +94,11 @@ export const Wallet: React.FC = () => {
             <div className="flex gap-4">
               <div className="flex-1 bg-white/10 rounded-xl p-3">
                 <p className="text-blue-200 text-xs font-medium">신고</p>
-                <p className="text-xl font-black">{INITIAL_WALLET.totalReports}건</p>
+                <p className="text-xl font-black">{totalReports}건</p>
               </div>
               <div className="flex-1 bg-white/10 rounded-xl p-3">
                 <p className="text-blue-200 text-xs font-medium">퀴즈</p>
-                <p className="text-xl font-black">{INITIAL_WALLET.totalQuizzes}회</p>
+                <p className="text-xl font-black">{totalQuizzes}회</p>
               </div>
               <div className="flex-1 bg-white/10 rounded-xl p-3">
                 <p className="text-blue-200 text-xs font-medium">레벨</p>
@@ -72,7 +123,7 @@ export const Wallet: React.FC = () => {
           </div>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={INITIAL_WALLET.history}>
+              <BarChart data={history}>
                 <XAxis
                   dataKey="day"
                   stroke="#94a3b8"
@@ -127,7 +178,7 @@ export const Wallet: React.FC = () => {
           {/* 상품 목록 */}
           <div className="space-y-3">
             {filteredItems.map((item) => {
-              const canAfford = INITIAL_WALLET.balance >= item.price;
+              const canAfford = balance >= item.price;
 
               return (
                 <div

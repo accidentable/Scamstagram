@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Shield, LogOut, Gift } from 'lucide-react';
-import { INITIAL_WALLET } from '../constants';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
 
 interface TopBarProps {
   user?: {
@@ -14,6 +15,27 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onWallet }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [balance, setBalance] = useState(0);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/wallet/`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setBalance(data.balance ?? 0);
+        }
+      } catch (e) {
+        console.error('Failed to fetch balance:', e);
+      }
+    };
+    fetchBalance();
+  }, []);
 
   return (
     <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 px-5 py-4 flex justify-between items-center">
@@ -33,7 +55,7 @@ export const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onWallet }) => {
           className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-1.5 rounded-full hover:shadow-lg hover:scale-105 transition-all"
         >
           <Gift className="w-4 h-4 text-white" />
-          <span className="font-bold text-white text-sm">{INITIAL_WALLET.balance}P</span>
+          <span className="font-bold text-white text-sm">{balance}P</span>
         </button>
 
         <button className="relative p-2 rounded-full hover:bg-slate-100 transition-colors">

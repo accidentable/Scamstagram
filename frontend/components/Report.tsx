@@ -1,16 +1,38 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Camera, Loader2, X, AlertTriangle, CheckCircle, Clock, Gift } from 'lucide-react';
-import { analyzeScamMedia } from '../services/geminiService';
-import { ScanResult } from '../types';
-import { REWARD_POINTS, INITIAL_WALLET } from '../constants';
+import { analyzeScamMedia, AnalyzeResult } from '../services/geminiService';
+import { REWARD_POINTS } from '../constants';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
 
 export const Report: React.FC = () => {
   const [media, setMedia] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<ScanResult | null>(null);
-  const [todayReported, setTodayReported] = useState(INITIAL_WALLET.todayReported);
+  const [result, setResult] = useState<AnalyzeResult | null>(null);
+  const [todayReported, setTodayReported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 오늘 신고 여부 확인
+  useEffect(() => {
+    const checkDailyStatus = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/wallet/status`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setTodayReported(data.today_reported);
+        }
+      } catch (e) {
+        console.error('Failed to check daily status:', e);
+      }
+    };
+    checkDailyStatus();
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -38,6 +60,14 @@ export const Report: React.FC = () => {
     try {
       const data = await analyzeScamMedia(media, mimeType);
       setResult(data);
+      
+      // 40% 이상이면 포인트 알림
+      if (data.scamScore >= 40 && data.rewarded) {
+        alert(`스캠으로 확인되어 피드에 게시되었습니다! +${REWARD_POINTS.REPORT}P 획득! 🎉`);
+        setTodayReported(true);
+      } else if (data.scamScore < 40) {
+        alert('위험도가 40% 미만이어서 포인트가 지급되지 않습니다.');
+      }
     } catch (error) {
       console.error(error);
       alert("분석에 실패했습니다. 다시 시도해주세요.");
@@ -46,13 +76,7 @@ export const Report: React.FC = () => {
     }
   };
 
-  const handlePublish = () => {
-    if (todayReported) {
-      alert("오늘의 신고 보상은 이미 받으셨습니다. 내일 다시 시도해주세요!");
-      return;
-    }
-    setTodayReported(true);
-    alert(`신고가 접수되었습니다! +${REWARD_POINTS.REPORT}P 획득!`);
+  const handleClear = () => {
     setMedia(null);
     setResult(null);
   };
@@ -223,20 +247,16 @@ export const Report: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handlePublish}
-                  disabled={todayReported && result.isScam}
-                  className={`py-3 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 ${
-                    todayReported
-                      ? 'bg-slate-100 text-slate-400'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
+                <div className={`py-3 font-bold rounded-xl flex items-center justify-center gap-2 ${
+                  result.scamScore >= 40
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-slate-100 text-slate-500'
+                }`}>
                   <Gift className="w-4 h-4" />
-                  {todayReported ? '신고 완료' : `신고 (+${REWARD_POINTS.REPORT}P)`}
-                </button>
+                  {result.scamScore >= 40 ? '피드 게시 완료' : '포인트 미지급'}
+                </div>
                 <button
-                  onClick={() => { setMedia(null); setResult(null); }}
+                  onClick={handleClear}
                   className="py-3 bg-slate-100 text-slate-900 font-bold rounded-xl hover:bg-slate-200"
                 >
                   다시 하기
