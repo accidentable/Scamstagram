@@ -54,14 +54,30 @@ def post_to_response(post: Post) -> PostResponse:
         is_verified=post.user.is_verified
     )
 
+    # tags JSON 파싱
+    tags = post.tags
+    if isinstance(tags, str):
+        try:
+            tags = json.loads(tags)
+        except:
+            tags = []
+    
     scan_result = None
     if post.scan_result:
+        # extracted_tags JSON 파싱
+        extracted_tags = post.scan_result.extracted_tags
+        if isinstance(extracted_tags, str):
+            try:
+                extracted_tags = json.loads(extracted_tags)
+            except:
+                extracted_tags = []
+        
         scan_result = ScanResultResponse(
             is_scam=post.scan_result.is_scam,
             confidence_score=post.scan_result.confidence_score,
             scam_type=post.scan_result.scam_type,
             risk_level=post.scan_result.risk_level,
-            extracted_tags=post.scan_result.extracted_tags or [],
+            extracted_tags=extracted_tags or [],
             analysis=post.scan_result.analysis or ""
         )
 
@@ -71,7 +87,7 @@ def post_to_response(post: Post) -> PostResponse:
         imageUrl=post.image_url,
         description=post.description,
         scamType=post.scam_type,
-        tags=post.tags or [],
+        tags=tags or [],
         timestamp=format_timestamp(post.created_at),
         likeCount=post.like_count,
         commentCount=post.comment_count,
