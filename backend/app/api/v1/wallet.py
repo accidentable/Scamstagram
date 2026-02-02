@@ -49,3 +49,25 @@ async def get_daily_status(
         "today_reported": today_reported,
         "today_quiz_completed": today_quiz
     }
+
+
+QUIZ_REWARD_POINTS = 50
+
+@router.post("/quiz-reward")
+async def reward_quiz_completion(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Award points for completing daily quiz (once per day)"""
+    from app.services.wallet_service import reward_for_quiz
+    
+    rewarded, points = await reward_for_quiz(db, current_user.id)
+    
+    if rewarded:
+        await db.commit()
+    
+    return {
+        "rewarded": rewarded,
+        "points": points if rewarded else 0,
+        "message": "퀴즈 보상이 지급되었습니다!" if rewarded else "오늘 이미 퀴즈 보상을 받았습니다."
+    }

@@ -1,18 +1,55 @@
-import React, { useState } from 'react';
-import { CheckCircle, XCircle, HelpCircle, Trophy, ChevronRight, Lightbulb } from 'lucide-react';
-import { DAILY_QUIZ, REWARD_POINTS, INITIAL_WALLET } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, HelpCircle, Trophy, ChevronRight, Lightbulb, Play, Gift, Lock } from 'lucide-react';
+import { DAILY_QUIZ } from '../constants';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
+const QUIZ_POINTS = 50; // 퀴즈 완료 시 지급 포인트
 
 export const Quiz: React.FC = () => {
+  const [quizStarted, setQuizStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | boolean | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
-  const [totalPoints, setTotalPoints] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(INITIAL_WALLET.todayQuizCompleted);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [todayQuizDone, setTodayQuizDone] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
+
+  // 오늘 퀴즈 완료 여부 확인
+  useEffect(() => {
+    const checkQuizStatus = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/wallet/status`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setTodayQuizDone(data.today_quiz_completed || false);
+        }
+      } catch (e) {
+        console.error('Failed to check quiz status:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkQuizStatus();
+  }, []);
 
   const currentQuestion = DAILY_QUIZ[currentQuestionIndex];
-  const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+  const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
   const isLastQuestion = currentQuestionIndex === DAILY_QUIZ.length - 1;
+
+  const handleStartQuiz = () => {
+    if (todayQuizDone) return;
+    setQuizStarted(true);
+  };
 
   const handleAnswer = (answer: string | boolean) => {
     if (isAnswered) return;
@@ -22,13 +59,14 @@ export const Quiz: React.FC = () => {
 
     if (answer === currentQuestion.correctAnswer) {
       setScore(score + 1);
-      setTotalPoints(totalPoints + currentQuestion.points);
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastQuestion) {
       setQuizCompleted(true);
+      // 퀴즈 완료 시 포인트 지급 API 호출
+      await awardQuizPoints();
     } else {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
@@ -36,17 +74,93 @@ export const Quiz: React.FC = () => {
     }
   };
 
-  const handleRestart = () => {
-    setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
-    setIsAnswered(false);
-    setScore(0);
-    setTotalPoints(0);
-    setQuizCompleted(false);
+  const awardQuizPoints = async () => {
+    const token = localStorage.getItem('token');
+    if (!token || todayQuizDone) return;
+    
+    try {
+      const res = await fetch(`${API_BASE}/wallet/quiz-reward`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        setPointsAwarded(true);
+        setTodayQuizDone(true);
+      }
+    } catch (e) {
+      console.error('Failed to award quiz points:', e);
+    }
   };
 
+  // 로딩 화면
+  if (loading) {
+    return (
+      <div className="pt-24 pb-28 px-4 min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // 퀴즈 시작 전 화면
+  if (!quizStarted && !quizCompleted) {
+    return (
+      <div className="pt-24 pb-28 px-4 min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-lg text-center">
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <HelpCircle className="w-12 h-12 text-white" />
+          </div>
+
+          <h2 className="text-2xl font-black mb-2">오늘의 스캠 퀴즈</h2>
+          <p className="text-slate-500 mb-6">3문제를 모두 풀면 포인트를 받아요!</p>
+
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-center gap-8">
+              <div className="text-center">
+                <p className="text-3xl font-black text-blue-600">3</p>
+                <p className="text-sm text-slate-500 font-medium">문제</p>
+              </div>
+              <div className="w-px h-12 bg-slate-200" />
+              <div className="text-center">
+                <p className="text-3xl font-black text-green-600">+{QUIZ_POINTS}P</p>
+                <p className="text-sm text-slate-500 font-medium">완료 보상</p>
+              </div>
+            </div>
+          </div>
+
+          {todayQuizDone ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-center gap-2 text-green-600 mb-4">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-bold">오늘의 퀴즈 완료!</span>
+              </div>
+              <button
+                onClick={() => setQuizStarted(true)}
+                className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+              >
+                <Lock className="w-5 h-5" />
+                복습하기 (포인트 없음)
+              </button>
+              <p className="text-xs text-slate-400">내일 새로운 퀴즈가 준비됩니다</p>
+            </div>
+          ) : (
+            <button
+              onClick={handleStartQuiz}
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg"
+            >
+              <Play className="w-5 h-5" />
+              오늘의 퀴즈 풀기
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // 퀴즈 완료 화면
-  if (quizCompleted && currentQuestionIndex === DAILY_QUIZ.length - 1 && isAnswered) {
+  if (quizCompleted) {
     return (
       <div className="pt-24 pb-28 px-4 min-h-screen bg-slate-50 flex flex-col items-center justify-center">
         <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-lg text-center">
@@ -54,8 +168,8 @@ export const Quiz: React.FC = () => {
             <Trophy className="w-10 h-10 text-yellow-500" />
           </div>
 
-          <h2 className="text-2xl font-black mb-2">오늘의 퀴즈 완료!</h2>
-          <p className="text-slate-500 mb-6">수고하셨습니다</p>
+          <h2 className="text-2xl font-black mb-2">퀴즈 완료!</h2>
+          <p className="text-slate-500 mb-6">수고하셨습니다 🎉</p>
 
           <div className="bg-slate-50 rounded-2xl p-6 mb-6">
             <div className="flex justify-around">
@@ -65,44 +179,23 @@ export const Quiz: React.FC = () => {
               </div>
               <div className="w-px bg-slate-200" />
               <div className="text-center">
-                <p className="text-3xl font-black text-green-600">+{totalPoints}P</p>
+                <div className="flex items-center justify-center gap-1">
+                  <Gift className="w-5 h-5 text-green-600" />
+                  <p className="text-3xl font-black text-green-600">+{pointsAwarded ? QUIZ_POINTS : 0}P</p>
+                </div>
                 <p className="text-sm text-slate-500 font-medium">획득 포인트</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <button
-              onClick={handleRestart}
-              className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-colors"
-            >
-              다시 풀기
-            </button>
-            <p className="text-xs text-slate-400">포인트는 1일 1회만 지급됩니다</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+          {pointsAwarded && (
+            <div className="bg-green-50 text-green-700 rounded-xl p-3 mb-4 flex items-center justify-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-bold">포인트가 지급되었습니다!</span>
+            </div>
+          )}
 
-  // 퀴즈 이미 완료 상태
-  if (quizCompleted && !isAnswered) {
-    return (
-      <div className="pt-24 pb-28 px-4 min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-lg text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-500" />
-          </div>
-
-          <h2 className="text-2xl font-black mb-2">오늘의 퀴즈 완료!</h2>
-          <p className="text-slate-500 mb-6">내일 새로운 퀴즈가 준비됩니다</p>
-
-          <button
-            onClick={handleRestart}
-            className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-colors"
-          >
-            복습하기 (포인트 없음)
-          </button>
+          <p className="text-xs text-slate-400">포인트는 하루 1회만 지급됩니다</p>
         </div>
       </div>
     );
@@ -117,7 +210,7 @@ export const Quiz: React.FC = () => {
             문제 {currentQuestionIndex + 1} / {DAILY_QUIZ.length}
           </span>
           <span className="text-sm font-bold text-blue-600">
-            +{currentQuestion.points}P
+            +{QUIZ_POINTS}P
           </span>
         </div>
         <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -227,7 +320,7 @@ export const Quiz: React.FC = () => {
                   <XCircle className="w-5 h-5 text-red-600" />
                 )}
                 <span className={`font-bold ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                  {isCorrect ? `정답입니다! +${currentQuestion.points}P` : '아쉽네요!'}
+                  {isCorrect ? '정답입니다!' : '아쉽네요!'}
                 </span>
               </div>
               <div className="flex items-start gap-2">

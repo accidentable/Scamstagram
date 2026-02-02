@@ -87,9 +87,16 @@ async def reward_for_report(db: AsyncSession, user_id) -> tuple[bool, int]:
     return True, points
 
 
-async def reward_for_quiz(db: AsyncSession, user_id, points: int) -> tuple[bool, int]:
-    """Give reward for quiz correct answer"""
-    await add_points(db, user_id, points, "quiz", "Quiz correct answer")
+async def reward_for_quiz(db: AsyncSession, user_id) -> tuple[bool, int]:
+    """
+    Give reward for completing quiz (once per day)
+    Returns (success, points_earned)
+    """
+    if not await record_daily_activity(db, user_id, "quiz"):
+        return False, 0
+
+    points = 50  # 퀴즈 완료 시 50포인트
+    await add_points(db, user_id, points, "quiz", "Daily quiz completion reward")
     return True, points
 
 
