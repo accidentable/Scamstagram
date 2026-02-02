@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Camera, HelpCircle, Wallet } from 'lucide-react';
+import { Home, Camera, HelpCircle } from 'lucide-react';
 import { Tab } from '../types';
 
 interface NavbarProps {
@@ -10,9 +10,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange }) => {
   const tabs = [
     { id: Tab.FEED, icon: Home, label: '피드' },
-    { id: Tab.REPORT, icon: Camera, label: '신고' },
+    { id: Tab.REPORT, icon: Camera, label: '' },
     { id: Tab.QUIZ, icon: HelpCircle, label: '퀴즈' },
-    { id: Tab.WALLET, icon: Wallet, label: '보상' },
   ];
 
   return (

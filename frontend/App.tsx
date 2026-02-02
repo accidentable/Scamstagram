@@ -97,7 +97,7 @@ export default function App() {
   // Main App
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
-      <TopBar user={currentUser} onLogout={handleLogout} />
+      <TopBar user={currentUser} onLogout={handleLogout} onWallet={() => setActiveTab(Tab.WALLET)} />
       <main className="w-full">
         {renderContent()}
       </main>

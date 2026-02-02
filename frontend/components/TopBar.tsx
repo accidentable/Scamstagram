@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Shield, LogOut, User } from 'lucide-react';
+import { Bell, Shield, LogOut, Gift } from 'lucide-react';
 import { INITIAL_WALLET } from '../constants';
 
 interface TopBarProps {
@@ -9,9 +9,10 @@ interface TopBarProps {
     level: number;
   } | null;
   onLogout?: () => void;
+  onWallet?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ user, onLogout }) => {
+export const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onWallet }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -26,11 +27,14 @@ export const TopBar: React.FC<TopBarProps> = ({ user, onLogout }) => {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* 포인트 표시 */}
-        <div className="flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-full">
-          <span className="text-lg">🪙</span>
-          <span className="font-bold text-indigo-700 text-sm">{INITIAL_WALLET.balance}P</span>
-        </div>
+        {/* 보상 버튼 */}
+        <button 
+          onClick={onWallet}
+          className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-1.5 rounded-full hover:shadow-lg hover:scale-105 transition-all"
+        >
+          <Gift className="w-4 h-4 text-white" />
+          <span className="font-bold text-white text-sm">{INITIAL_WALLET.balance}P</span>
+        </button>
 
         <button className="relative p-2 rounded-full hover:bg-slate-100 transition-colors">
           <Bell className="w-6 h-6 text-black" strokeWidth={2} />
