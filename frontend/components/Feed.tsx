@@ -1,9 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PostCard } from './PostCard';
 import { MOCK_POSTS } from '../constants';
-import { TrendingUp, AlertCircle, Users } from 'lucide-react';
+import { TrendingUp, AlertCircle, Users, Loader2 } from 'lucide-react';
+import { Post } from '../types';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://scamkeep-api-932863380761.asia-northeast3.run.app/api/v1';
+
+// API 응답 (snake_case) -> 프론트엔드 타입 (camelCase) 변환
+const transformPost = (apiPost: any): Post => ({
+  id: apiPost.id,
+  user: {
+    id: apiPost.user?.id || 'unknown',
+    username: apiPost.user?.username || '익명',
+    avatar: apiPost.user?.avatar || `https://picsum.photos/seed/${apiPost.id}/200/200`,
+    level: apiPost.user?.level || 1,
+    isVerified: apiPost.user?.is_verified || false,
+  },
+  imageUrl: apiPost.image_url?.startsWith('/') 
+    ? `${API_BASE.replace('/api/v1', '')}${apiPost.image_url}` 
+    : apiPost.image_url || '',
+  description: apiPost.description || '',
+  scamType: apiPost.scam_type || 'Unknown',
+  tags: typeof apiPost.tags === 'string' ? JSON.parse(apiPost.tags || '[]') : (apiPost.tags || []),
+  timestamp: apiPost.created_at || apiPost.timestamp || new Date().toISOString(),
+  likeCount: apiPost.like_count || 0,
+  commentCount: apiPost.comment_count || 0,
+  comments: apiPost.comments || [],
+  isVerifiedScam: apiPost.is_verified_scam || false,
+  scamScore: apiPost.scam_score || 0,
+});
 
 export const Feed: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setPosts(MOCK_POSTS);
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/posts/`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log('[Feed] API Response:', data);
+          // API 응답 변환
+          const rawPosts = data.posts || data || [];
+          const apiPosts = rawPosts.map(transformPost);
+          // API 게시물 먼저, 그 다음 mock 데이터
+          setPosts([...apiPosts, ...MOCK_POSTS]);
+        } else {
+          console.error('[Feed] API Error:', res.status);
+          setPosts(MOCK_POSTS);
+        }
+      } catch (e) {
+        console.error('Failed to fetch posts:', e);
+        setPosts(MOCK_POSTS);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
+
   return (
     <div className="pt-24 pb-28 px-4 min-h-screen bg-slate-50">
       {/* 통계 카드 */}
@@ -49,9 +114,21 @@ export const Feed: React.FC = () => {
           <button className="text-sm text-blue-600 font-bold">전체보기</button>
         </div>
 
-        {MOCK_POSTS.map(post => (
-          <PostCard key={post.id} post={post} />
-        ))}
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
+        ) : posts.length > 0 ? (
+          posts.map(post => (
+            <PostCard key={post.id} post={post} />
+          ))
+        ) : (
+          <div className="text-center py-10 opacity-50">
+            <div className="w-16 h-16 bg-slate-200 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">📭</div>
+            <p className="font-bold text-slate-400">아직 게시물이 없습니다</p>
+            <p className="text-sm text-slate-400 mt-1">스캠을 발견하면 신고해주세요!</p>
+          </div>
+        )}
 
         <div className="text-center py-10 opacity-50">
           <div className="w-16 h-16 bg-slate-200 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl">🛡️</div>
