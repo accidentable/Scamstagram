@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(npm run build:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gcloud config get-value:*)",
+      "Bash(gcloud run services list:*)",
+      "Bash(gcloud run deploy:*)"
     ]
   }
 }
