@@ -18,6 +18,10 @@ export const analyzeScamMedia = async (base64Data: string, mimeType: string): Pr
 
     // Call backend API instead of Gemini directly
     const token = localStorage.getItem('token');
+    console.log('[Frontend] Calling analyze-json API...');
+    console.log('[Frontend] Token exists:', !!token);
+    console.log('[Frontend] Base64 length:', cleanBase64.length);
+    
     const response = await fetch(`${API_BASE}/posts/analyze-json`, {
       method: 'POST',
       headers: {
@@ -30,36 +34,46 @@ export const analyzeScamMedia = async (base64Data: string, mimeType: string): Pr
       }),
     });
 
+    console.log('[Frontend] Response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[Frontend] API Error response:', errorText);
+      throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const scamScore = data.scam_score ?? 0;
+    console.log('[Frontend] API Response:', JSON.stringify(data, null, 2));
     
-    // Map backend response to ScanResult format
+    // 백엔드 응답 구조: { scan_result: {...}, scam_score: number }
+    const scamScore = data.scam_score ?? 0;
+    const scanResult = data.scan_result ?? {};
+    
+    console.log('[Frontend] Parsed scamScore:', scamScore);
+    console.log('[Frontend] Parsed scanResult:', scanResult);
+    
     return {
-      isScam: data.scan_result?.is_scam ?? true,
-      confidenceScore: data.scan_result?.confidence_score ?? 75,
-      scamType: data.scan_result?.scam_type ?? 'Unknown',
-      riskLevel: data.scan_result?.risk_level ?? 'MEDIUM',
-      extractedTags: data.scan_result?.extracted_tags ?? ['#의심', '#확인필요'],
-      analysis: data.scan_result?.analysis ?? 'AI 분석 완료',
+      isScam: scanResult.is_scam ?? true,
+      confidenceScore: scanResult.confidence_score ?? 75,
+      scamType: scanResult.scam_type ?? 'Unknown',
+      riskLevel: scanResult.risk_level ?? 'MEDIUM',
+      extractedTags: scanResult.extracted_tags ?? ['#의심', '#확인필요'],
+      analysis: scanResult.analysis ?? 'AI 분석 완료',
       scamScore: scamScore,
       rewarded: scamScore >= 40,
     };
 
   } catch (error) {
-    console.error('Analysis Error:', error);
+    console.error('[Frontend] Analysis Error:', error);
     
-    // Return mock result for demo purposes
+    // Return error result - scamScore stays 0 to indicate failure
     return {
-      isScam: true,
-      confidenceScore: 75,
-      scamType: '스미싱 의심',
-      riskLevel: 'MEDIUM',
-      extractedTags: ['#의심스러움', '#확인필요'],
-      analysis: 'AI 분석을 완료했습니다. 이 메시지는 스미싱으로 의심됩니다.',
+      isScam: false,
+      confidenceScore: 0,
+      scamType: '분석 실패',
+      riskLevel: 'LOW',
+      extractedTags: ['#오류', '#재시도필요'],
+      analysis: `분석 중 오류가 발생했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`,
       scamScore: 0,
       rewarded: false,
     };
